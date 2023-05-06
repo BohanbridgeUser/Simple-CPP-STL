@@ -31,13 +31,14 @@ class String
         String& append(const char c);
         String& append(const String& s);
         String& append(const char* s);
-        String& push_back(char c);
+        String& push_back(const char c);
         String& push_back(const String& s);
-        String& push_back(char* s);
+        String& push_back(const char* s);
         String& operator=(const String& another);
+        String& operator=(String&& another);
         friend String operator+(const String& a, const String& b);
         friend std::ostream& operator<<(std::ostream& os, const String& s);
-        friend std::istream& operator>>(std::istream& is, const String& s);
+        friend std::istream& operator>>(std::istream& is, String& s);
         
         class Iterator
         {
@@ -169,5 +170,156 @@ int String::length()const
 {
     return len;
 }
-
+String& String::append(const char c)
+{
+    s[len++] = c;
+    s[len] = '\0';
+    return *this;
+}
+String& String::append(const String& another)
+{
+    if (another.len + len + 1 > capacity) {
+        capacity = (len + another.len) * 1.5 + 1;
+        char* temp = new char[capacity];
+        strncpy(temp, s, len);
+        len += another.len;
+        strncat(temp, another.s, another.len);
+        temp[len] ='\0';
+        delete [] s;
+        s = temp;
+        return *this;
+    } else {
+        strncat(s,another.s,another.len);
+        len += another.len;
+        s[len] = '\0';
+        return *this;
+    }
+}
+String& String::append(const char* c)
+{
+    if (len + strlen(c) + 1 > capacity ) {
+        capacity = (len + strlen(c)) * 1.5 + 1;
+        char* temp = new char[capacity];
+        strncpy(temp, s, len);
+        len += strlen(c);
+        strncat(temp, c, strlen(c));
+        temp[len] = '\0';
+        delete [] s;
+        s = temp;
+        return *this;
+    } else {
+        strncat(s, c, strlen(c));
+        len += strlen(c);
+        s[len] = '\0';
+        return *this;
+    }
+}
+String& String::push_back(const char c)
+{
+    if ( len + 2 > capacity ) {
+        capacity = (len + 2) * 1.5 + 1;
+        char* temp = new char[capacity];
+        strncpy(temp,s,len);
+        temp[len++] = c;
+        temp[len] ='\0';
+        return *this;
+    }else {
+        s[len++] = c;
+        s[len] = '\0';
+        return *this;
+    }
+}
+String& String::push_back(const String& another)
+{
+    if ( len + another.len + 1 > capacity ) {
+        capacity = (len + another.len) * 1.5 + 1;
+        char* temp = new char[capacity];
+        strncpy(temp,s,len);
+        len += another.len;
+        strncat(temp,another.s,another.len);
+        temp[len] ='\0';
+        return *this;
+    }else {
+        strncat(s,another.s,another.len);
+        len += another.len;
+        s[len] = '\0';
+        return *this;
+    }
+}
+String& String::push_back(const char* c)
+{
+    if ( len + strlen(c) + 1 > capacity ) {
+        capacity = (len + strlen(c)) * 1.5 + 1;
+        char* temp = new char[capacity];
+        strncpy(temp,s,len);
+        len += strlen(c);
+        strncat(temp,c,strlen(c));
+        temp[len] ='\0';
+        return *this;
+    }else {
+        strncat(s,c,strlen(c));
+        len += strlen(c);
+        s[len] = '\0';
+        return *this;
+    }
+}
+String& String::operator=(const String& another)
+{
+    if (this == &another) return *this;
+    else {
+        delete [] s;
+        len = another.len;
+        capacity = another.capacity;
+        s = new char[capacity];
+        strncpy(s, another.s, another.len);
+        s[len] = '\0';
+        return *this;
+    }
+}
+String& String::operator=(String&& another)
+{
+    delete [] s;
+    len = another.len;
+    capacity = another.capacity;
+    s = another.s;
+    another.s = nullptr;
+    return *this;
+}
+String operator+(const String& a, const String& b)
+{
+    String temp;
+    temp.capacity = (a.len + b.len) * 1.5 + 1;
+    temp.len = a.len + b.len;
+    temp.s = new char[temp.capacity];
+    strncpy(temp.s, a.s, a.len);
+    strncat(temp.s, b.s, b.len);
+    temp.s[temp.len] = '\0';
+    return temp;
+}
+std::ostream& operator<<(std::ostream& os, const String& str)
+{
+    os << str.s;
+    return os;
+}
+std::istream& operator>>(std::istream& is, String& str)
+{
+    delete [] str.s;
+    str.len = 0;
+    str.capacity = 10;
+    char t = '\0';
+    str.s = new char[str.capacity];
+    while ( is.get(t) && (t != '\n' || t != ' ')) {
+        if (str.len + 1 < str.capacity) str.s[str.len++] = t;
+        else {
+            str.capacity = str.len * 1.5 + 1;
+            char* temp = new char[str.capacity];
+            strncpy(temp, str.s, str.len);
+            temp[str.len++] = t;
+            delete [] str.s;
+            str.s = temp;
+        }
+    }
+    str.s[str.len] = '\0';
+    return is;
+}
 #endif
