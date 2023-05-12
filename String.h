@@ -12,7 +12,7 @@ class String
         int capacity;
     public:
         String();
-        String(char* a);
+        String(const char* a);
         String(char c, int i = 0);
         String(const String& another);
         ~String();
@@ -40,28 +40,11 @@ class String
         friend std::ostream& operator<<(std::ostream& os, const String& s);
         friend std::istream& operator>>(std::istream& is, String& s);
         
-        class Iterator
-        {
-            private:
-                char* iter;
-            public:
-                Iterator();
-                Iterator(Iterator& another);
-                ~Iterator();
-                Iterator& operator=(const Iterator& i);
-                Iterator operator+(const Iterator& another)const;
-                Iterator operator-(const Iterator& another)const;
-                Iterator& operator++();
-                Iterator operator++(int);
-                Iterator& operator--();
-                Iterator operator--(int);
-                friend bool operator==(const Iterator& a, const Iterator& b);
-                friend bool operator!=(const Iterator& a, const Iterator& b);
-        };
-        Iterator begin()const;
-        Iterator end()const;
-        Iterator rbegin()const;
-        Iterator rend()const;
+        using Iterator = char*;
+        Iterator begin()const{return &s[0];}
+        Iterator end()const {return &s[len];}
+        Iterator rbegin()const {return &s[len];}
+        Iterator rend()const {return &s[0];}
 };
 String::String()
 {
@@ -70,7 +53,7 @@ String::String()
     len = 0;
     capacity = len * 1.5 + 1;
 }
-String::String(char* a)
+String::String(const char* a)
 {
     len = strlen(a);
     capacity = len * 1.5 + 1;
@@ -172,9 +155,18 @@ int String::length()const
 }
 String& String::append(const char c)
 {
-    s[len++] = c;
-    s[len] = '\0';
-    return *this;
+    if ( len + 2 > capacity ) {
+        capacity = (len + 2) * 1.5 + 1;
+        char* temp = new char[capacity];
+        strncpy(temp,s,len);
+        temp[len++] = c;
+        temp[len] ='\0';
+        return *this;
+    }else {
+        s[len++] = c;
+        s[len] = '\0';
+        return *this;
+    }
 }
 String& String::append(const String& another)
 {
@@ -182,6 +174,7 @@ String& String::append(const String& another)
         capacity = (len + another.len) * 1.5 + 1;
         char* temp = new char[capacity];
         strncpy(temp, s, len);
+        temp[len] = '\0';
         len += another.len;
         strncat(temp, another.s, another.len);
         temp[len] ='\0';
@@ -201,6 +194,7 @@ String& String::append(const char* c)
         capacity = (len + strlen(c)) * 1.5 + 1;
         char* temp = new char[capacity];
         strncpy(temp, s, len);
+        temp[len] = '\0';
         len += strlen(c);
         strncat(temp, c, strlen(c));
         temp[len] = '\0';
@@ -235,6 +229,7 @@ String& String::push_back(const String& another)
         capacity = (len + another.len) * 1.5 + 1;
         char* temp = new char[capacity];
         strncpy(temp,s,len);
+        temp[len] = '\0';
         len += another.len;
         strncat(temp,another.s,another.len);
         temp[len] ='\0';
@@ -252,6 +247,7 @@ String& String::push_back(const char* c)
         capacity = (len + strlen(c)) * 1.5 + 1;
         char* temp = new char[capacity];
         strncpy(temp,s,len);
+        temp[len] = '\0';
         len += strlen(c);
         strncat(temp,c,strlen(c));
         temp[len] ='\0';
@@ -292,6 +288,7 @@ String operator+(const String& a, const String& b)
     temp.len = a.len + b.len;
     temp.s = new char[temp.capacity];
     strncpy(temp.s, a.s, a.len);
+    temp[a.len] = '\0';
     strncat(temp.s, b.s, b.len);
     temp.s[temp.len] = '\0';
     return temp;
